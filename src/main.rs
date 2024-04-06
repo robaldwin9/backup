@@ -106,56 +106,58 @@ fn copy_files(paths: Vec<String>, excludes: Vec<String>, cwd: PathBuf) {
         println!("path string: {}", path_str);
         let path_buf = Path::new(&path_str);
 
-        // for each file in that directory
-        for entry in WalkDir::new(path_buf) {
-            // get path of file
-            let entry = entry.unwrap();
-            let path = entry.path();
+        if path_buf.exists() {
+            // for each file in that directory
+            for entry in WalkDir::new(path_buf) {
+                // get path of file
+                let entry = entry.unwrap();
+                let path = entry.path();
 
-            // use path buffer to copy to current working directory
-            let mut destination = cwd.clone();
-            let path_buffer = PathBuf::from(path);
+                // use path buffer to copy to current working directory
+                let mut destination = cwd.clone();
+                let path_buffer = PathBuf::from(path);
 
-            // root directory buffer is absolute
-            let mut mut_path_buffer = PathBuf::from(&path_str);
-            mut_path_buffer.pop();
+                // root directory buffer is absolute
+                let mut mut_path_buffer = PathBuf::from(&path_str);
+                mut_path_buffer.pop();
 
-            // strip
-            let stripped = path_buffer
-                .strip_prefix(mut_path_buffer)
-                .expect("TODO: panic message");
-            destination.push(stripped);
+                // strip
+                let stripped = path_buffer
+                    .strip_prefix(mut_path_buffer)
+                    .expect("TODO: panic message");
+                destination.push(stripped);
 
-            // create directories
-            if path.is_dir() {
-                println!{"create directory: {}", destination.display()}
-                fs::create_dir_all(destination).unwrap();
+                // create directories
+                if path.is_dir() {
+                    println! {"create directory: {}", destination.display()}
+                    fs::create_dir_all(destination).unwrap();
 
-            // copy files
-            } else {
-                // check excluded extensions
-                match path.extension() {
-                    None => {
-                        println!("copy {} to {}", path.display(), destination.as_path().display());
-                        fs::copy(&path, &destination.as_path()).unwrap();
-                    },
-                    Some(extension) => {
-                        let mut excluded = false;
-                        for exclude in &excludes {
-                            let exclude_extension = exclude.replace(".", "");
-                            println!("exclude extensions: {}", exclude_extension.as_str());
-                            println!("extension: {}", extension.to_str().unwrap());
-                            if exclude_extension.as_str() == extension {
-                                excluded = true;
-                            }
-                        }
-
-                        if!excluded {
-                            // copy files
+                    // copy files
+                } else {
+                    // check excluded extensions
+                    match path.extension() {
+                        None => {
                             println!("copy {} to {}", path.display(), destination.as_path().display());
                             fs::copy(&path, &destination.as_path()).unwrap();
-                        }
-                    },
+                        },
+                        Some(extension) => {
+                            let mut excluded = false;
+                            for exclude in &excludes {
+                                let exclude_extension = exclude.replace(".", "");
+                                println!("exclude extensions: {}", exclude_extension.as_str());
+                                println!("extension: {}", extension.to_str().unwrap());
+                                if exclude_extension.as_str() == extension {
+                                    excluded = true;
+                                }
+                            }
+
+                            if !excluded {
+                                // copy files
+                                println!("copy {} to {}", path.display(), destination.as_path().display());
+                                fs::copy(&path, &destination.as_path()).unwrap();
+                            }
+                        },
+                    }
                 }
             }
         }
